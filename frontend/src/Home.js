@@ -30,9 +30,15 @@ function Home() {
             </ul>
             <p> Or select a private world: </p>
             <input type="text" value={privateWorld} onChange={(e) => setPrivateWorld(e.target.value)} />
-            <Link to={"/play/" + encodeURIComponent(privateWorld)}> 
+            <Link to={"/play/" + encodeURIComponent(privateWorld.trim())}> 
                 <button disabled={!privateWorld}> Join </button> 
             </Link>
+            <p>
+                <Link to="/create/">
+                    Or create a new world yourself!
+                </Link>
+            </p>
+            
         </div>
     )
 }

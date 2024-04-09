@@ -11,15 +11,16 @@ function Play() {
     useEffect(() => {
         axios.get('/getdesc', {params: {name: worldParam}})
         .then(response => {
-            if (response.data["found"]) {
-                setDesc(response.data["desc"]);
-                setSuccess(true);
-            } else {
+            if (response.data["notFound"]) {
                 setSuccess(false);
+                setLoading(false);
+                return;
             }
 
+            setDesc(response.data["desc"]);
+            setSuccess(true);
             setLoading(false);
-        })
+        }) 
         .catch(error => {
             console.error('Error fetching public worlds:', error);
         });
