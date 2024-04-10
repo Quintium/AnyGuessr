@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 
-function Play() {
+function PlayOverview() {
     const { worldParam } = useParams();
     const [loading, setLoading] = useState(true);
     const [success, setSuccess] = useState(false);
@@ -22,7 +22,7 @@ function Play() {
             setLoading(false);
         }) 
         .catch(error => {
-            console.error('Error fetching public worlds:', error);
+            console.error('Error fetching description:', error);
         });
     }, []);
 
@@ -34,7 +34,12 @@ function Play() {
                 <p> Loading... </p>
             ) : (
                 success ? (
-                    <p> {desc} </p>
+                    <div>
+                        <p> {desc} </p>
+                        <Link to={"/play/normal/" + encodeURIComponent(worldParam)}> Normal mode</Link> <br />
+                        <Link to={"/play/reversed/" + encodeURIComponent(worldParam)}> Reversed mode </Link> <br />
+                        <Link to={"/play/train/" + encodeURIComponent(worldParam)}> Training mode </Link> <br />
+                    </div>
                 ) : (
                     <p style={{color: 'red'}}>
                         This world doesn't exist
@@ -45,4 +50,4 @@ function Play() {
     )
 }
 
-export default Play;
+export default PlayOverview;

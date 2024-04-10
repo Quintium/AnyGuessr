@@ -24,13 +24,13 @@ function Home() {
             <ul>
                 {publicWorlds.map(world => (
                     <li key={world}> 
-                        <Link to={'/play/' + encodeURIComponent(world)}> {world} </Link> 
+                        <Link to={'/play/overview/' + encodeURIComponent(world)}> {world} </Link> 
                     </li>
                 ))}
             </ul>
             <p> Or select a private world: </p>
             <input type="text" value={privateWorld} onChange={(e) => setPrivateWorld(e.target.value.trim())} />
-            <Link to={"/play/" + encodeURIComponent(privateWorld)}> 
+            <Link to={"/play/overview/" + encodeURIComponent(privateWorld)}> 
                 <button disabled={!privateWorld}> Join </button> 
             </Link>
             <p>
