@@ -9,7 +9,7 @@ function Home() {
     const updateWorlds = () => {
         axios.get('/publicworlds')
         .then(response => {
-            setPublicWorlds(response.data);
+            setPublicWorlds(response.data.worlds);
         })
         .catch(error => {
             console.error('Error fetching public worlds:', error);
@@ -29,8 +29,8 @@ function Home() {
                 ))}
             </ul>
             <p> Or select a private world: </p>
-            <input type="text" value={privateWorld} onChange={(e) => setPrivateWorld(e.target.value)} />
-            <Link to={"/play/" + encodeURIComponent(privateWorld.trim())}> 
+            <input type="text" value={privateWorld} onChange={(e) => setPrivateWorld(e.target.value.trim())} />
+            <Link to={"/play/" + encodeURIComponent(privateWorld)}> 
                 <button disabled={!privateWorld}> Join </button> 
             </Link>
             <p>

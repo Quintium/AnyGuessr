@@ -8,21 +8,17 @@ CORS(app)
 
 @app.route("/publicworlds", methods=["GET"])
 def getWorlds():
-    print("Public worlds request received")
+    cursor = getDB().cursor()
+    cursor.execute("SELECT Name FROM Worlds WHERE IsPublic;")
 
-    mycursor = getDB().cursor()
-    mycursor.execute("SELECT Name FROM Worlds WHERE IsPublic;")
-
-    return [data[0] for data in mycursor]
+    return {"worlds": [data[0] for data in cursor]}
 
 @app.route("/getdesc", methods=["GET"])
 def getDesc():
-    print("Get description request received")
+    cursor = getDB().cursor()
+    cursor.execute("SELECT Description FROM Worlds WHERE Name=%s;", (request.args["name"].strip(),))
 
-    mycursor = getDB().cursor()
-    mycursor.execute("SELECT Description FROM Worlds WHERE Name=%s;", (request.args["name"].strip(),))
-
-    res = list(mycursor)
+    res = list(cursor)
     if not res:
         return {"notFound": True}
     else:
@@ -31,20 +27,39 @@ def getDesc():
 MIN_NAME_LENGTH = 5
 MAX_NAME_LENGTH = 20
 MAX_DESC_LENGTH = 200
-NAME_REGEX = r"^[a-zA-Z0-9_ ]*$"
-DESC_REGEX = r"^[a-zA-Z0-9,;.:\-_#'+*~´`?\\}=\])[({/&%$§\"!^°<>| ]*$"
+MAX_CHAR_LENGTH = 20
+REGEX = r"^[a-zA-Z0-9,;.:\-_#'+*~´`?\\}=\])[({/&%$§\"!^°<>| ]*$"
 
 @app.route("/create", methods=["POST"])
 def createWorld():
-    print("Creation request received")
-
-    name, desc, public = request.args["worldName"].strip(), request.args["worldDesc"].strip(), request.args["isPublic"]
-    if len(name) < MIN_NAME_LENGTH or len(name) > MAX_NAME_LENGTH or len(desc) > MAX_DESC_LENGTH or not re.search(NAME_REGEX, name) or not re.search(DESC_REGEX, desc):
-        return "Invalid name/description", 400
+    data = request.json
+    name, desc, isPublic, characters = data["name"].strip(), data["desc"].strip(), data["isPublic"], [c.strip() for c in data["characters"]]
+    lCharacters = [c.lower() for c in characters]
+    if len(name) < MIN_NAME_LENGTH or len(name) > MAX_NAME_LENGTH or len(desc) > MAX_DESC_LENGTH or not re.search(REGEX, name) or not re.search(REGEX, desc) or len(characters) < 2 or any([not c or len(c) > MAX_CHAR_LENGTH or not re.search(REGEX, c) for c in characters]) or len(lCharacters) != len(set(lCharacters)):
+        return "Invalid params", 400
     
-    mycursor = getDB().cursor()
-    mycursor.execute("INSERT INTO Worlds (Name, Description, IsPublic) VALUES (%s, %s, %s);", (name, desc, (1 if public else 0)))
+    cursor = getDB().cursor()
+    cursor.execute("SELECT * FROM Worlds WHERE Name=%s;", (name,))
+
+    res = cursor.fetchall()
+    if len(res) != 0:
+        return {"taken": True}
+
+    cursor.execute("INSERT INTO Worlds (Name, Description, IsPublic) VALUES (%s, %s, %s);", (name, desc, (1 if isPublic else 0)))
     getDB().commit()
+
+    cursor.execute("SELECT MAX(WorldID) FROM Worlds;")
+    res = cursor.fetchall()
+    worldID = 1 if res[0][0] == None else res[0][0]
+
+    cursor.execute("SELECT MAX(CharacterID) FROM Characters WHERE WorldID=%s;", (worldID,))
+    res = cursor.fetchall()
+    characterID = 1 if res[0][0] == None else res[0][0] + 1
+
+    for c in characters:
+        cursor.execute("INSERT INTO Characters (WorldID, CharacterID, Name) VALUES (%s, %s, %s);", (worldID, characterID, c))
+        getDB().commit()
+        characterID += 1
 
     return "Success"
 
